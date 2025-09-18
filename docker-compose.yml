@@ -1,0 +1,8 @@
+services:
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+  crud:
+    image: ${DOCKER_REGISTRY-}crud
+    build:
+      context: .
+      dockerfile: src/CRUD/Dockerfile
