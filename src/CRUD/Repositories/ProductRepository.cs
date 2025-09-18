@@ -17,8 +17,13 @@ public class ProductRepository : IProductRepository
 
     public async Task<OperationResult> AddAsync(AddProductModel addProductModel)
     {
-        var newConnection = _dbContext.NewConnection();
-        await newConnection.OpenAsync();
+        await using var newConnection = _dbContext.NewConnection();
+
+        string existQuery = "SELECT COUNT(*) FROM dbo.Product WHERE Name = @name";
+        var exists = await newConnection.QueryFirstOrDefaultAsync<int>(existQuery, new { name = addProductModel.Name });
+        if (exists > 0)
+            return OperationResult.Failed("Duplicate record.");
+
         string query = """
             INSERT INTO dbo.Product ([Name],UnitPrice)
             VALUES
@@ -30,21 +35,18 @@ public class ProductRepository : IProductRepository
     }
     public async Task<OperationResult> DeleteAsync(int id)
     {
-        var newConnection = _dbContext.NewConnection();
-        await newConnection.OpenAsync();
+        await using var newConnection = _dbContext.NewConnection();
         string query = """
             DELETE FROM dbo.Product
             WHERE Id = @Id
             """;
         var result = await newConnection.ExecuteAsync(query, new { id = id });
-
         return result == 1 ? OperationResult.Success() : OperationResult.Failed("Failed operation.");
     }
 
-    public async Task<ProductModel?> DetailsAsync(int id)
+    public async Task<ProductModel?> GetByIdAsync(int id)
     {
-        var newConnection = _dbContext.NewConnection();
-        await newConnection.OpenAsync();
+        await using var newConnection = _dbContext.NewConnection();
         string query = """
             SELECT * FROM dbo.Product WHERE Id = @Id
             """;
@@ -54,8 +56,7 @@ public class ProductRepository : IProductRepository
 
     public async Task<List<ProductModel>> GetAllAsync()
     {
-        var newConnection = _dbContext.NewConnection();
-        await newConnection.OpenAsync();
+        await using var newConnection = _dbContext.NewConnection();
         string query = """
             SELECT * FROM dbo.Product
             """;
@@ -65,8 +66,13 @@ public class ProductRepository : IProductRepository
 
     public async Task<OperationResult> UpdateAsync(UpdateProductModel updateProductModel)
     {
-        var newConnection = _dbContext.NewConnection();
-        await newConnection.OpenAsync();
+        await using var newConnection = _dbContext.NewConnection();
+
+        string existQuery = "SELECT COUNT(*) FROM dbo.Product WHERE Name = @name AND Id <> @id";
+        var exists = await newConnection.QueryFirstOrDefaultAsync<int>(existQuery, new { name = updateProductModel.Name, id = updateProductModel.Id });
+        if (exists > 0)
+            return OperationResult.Failed("Duplicate record.");
+
         string query = """
             UPDATE dbo.Product 
             SET Name = @Name, UnitPrice = @UnitPrice
