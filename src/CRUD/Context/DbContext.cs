@@ -14,4 +14,9 @@ public class DbContext
     {
         return new SqlConnection(_configuration.GetConnectionString("Default"));
     }
+
+    public SqlConnection NewMasterConnection()
+    {
+        return new SqlConnection(_configuration.GetConnectionString("Master"));
+    }
 }

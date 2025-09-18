@@ -4,6 +4,7 @@ using CRUD.Repositories;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using CRUD.Context;
+using CRUD.Migrations;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.AddConsole().AddDebug();
@@ -41,5 +42,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.ApplyMigration();
 
 app.Run();
