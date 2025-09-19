@@ -10,8 +10,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
+      - "ConnectionStrings:Default=Server=database;Database=dapper;User Id=sa;Password=Aa13846035;Encrypt=False"
+      - "ConnectionStrings:Master=Server=database;Database=master;User Id=sa;Password=Aa13846035;Encrypt=False"
     ports:
-      - "80:8080"
+      - "8080:8080"
     depends_on:
       - database
 
