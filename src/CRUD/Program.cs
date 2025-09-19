@@ -4,6 +4,8 @@ using CRUD.Migrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddConsole();
+
 builder.Services.RegisterDependency(builder.Configuration);
 
 builder.Services.AddControllers();

@@ -10,12 +10,37 @@ public static class Migration
     {
         var services = webApplication.Services.CreateScope().ServiceProvider;
         var context = services.GetRequiredService<DbContext>();
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger("Migration");
+
         using var newConnection = context.NewConnection();
         using var newMasterConnection = context.NewMasterConnection();
 
-        CreateDatabase(newMasterConnection);
-        
-        ProductConfigure.CreateProduct(newConnection);
+
+        TryApplyMigration(newMasterConnection, newConnection, logger);
+    }
+
+    public static bool TryApplyMigration(SqlConnection masterConnection, SqlConnection connection, ILogger logger, int tryMax = 50)
+    {
+        try
+        {
+            CreateDatabase(masterConnection);
+            ProductConfigure.CreateProduct(connection);
+        }
+        catch (Exception ex)
+        {
+            if (tryMax == 0)
+            {
+                logger.LogCritical(ex, "Migration failed after max retries");
+                return false;
+            }
+            logger.LogError(ex, $"Try to connect, remaining retries: {tryMax}");
+            return TryApplyMigration(masterConnection, connection, logger, tryMax - 1);
+        }
+
+        logger.LogInformation("Migration applied successfully");
+        return true;
+
     }
 
     public static void CreateDatabase(SqlConnection sqlConnection)
